@@ -34,4 +34,4 @@ class LSTMClassifier(nn.Module):
         output = self.dropout_layer(ht[-1])
         output = self.hidden2out(output)
         output = self.softmax(output)
-        return output
+        return output #shape: batch_size,output_size
