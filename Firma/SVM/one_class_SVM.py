@@ -25,12 +25,9 @@ for train_id in range(17):
     score_test_normal=model.score_samples(data_test_normal)
     score_test_anomaly=model.score_samples(data_test_anomaly)
     predict_train=model.predict(data_train)
-    print(predict_train.shape)
-    predict_train=predict_train>0
-    print(type(predict_train))
-
-    predict_test_normal=np.float(model.predict(data_test_normal)>0)
-    predict_test_anomaly=np.float(model.predict(data_test_anomaly)>0)
+    predict_train=1*predict_train>0
+    predict_test_normal=1*model.predict(data_test_normal)>0
+    predict_test_anomaly=1*model.predict(data_test_anomaly)>0
 #    print(np.mean(score_train),np.mean(score_test_normal),np.mean(score_test_anomaly))
     N_test_normal=data_test_normal.shape[0]
     N_test_anomaly=data_test_anomaly.shape[0]
@@ -39,5 +36,5 @@ for train_id in range(17):
     FP=np.sum(predict_test_anomaly)
     FN=N_test_normal-TP
     precision=TP/(TP+FP)# among all the points that are predicted to be positive, how many are ture positive
-    recal=TP/(TP+FN)# among all the points that are positive, how many of them are detected as positive
+    recall=TP/(TP+FN)# among all the points that are positive, how many of them are detected as positive
     print("train subject: {}, precision: {}, recall: {}, N_test_normal: {},N_test_anomaly:{}".format(train_id,precision,recall,N_test_normal,N_test_anomaly ))
