@@ -56,7 +56,6 @@ class FirmaData_all_subjects(Dataset):
             matsize=len(data_temp)
             train_idx=int(train_part*matsize)
             val_idx=int((train_part+val_part)*matsize)
-            print('subject:',sub_id)
             if self.subset=='train':
                 self.data=self.data+data_temp[:train_idx]
                 self.label=self.label+label_temp[:train_idx]
@@ -86,3 +85,4 @@ if __name__ == '__main__':
     print(dataset_val.__len__())
     dataset_test = FirmaData_all_subjects(data_folder_dir, 60,0.5,0.2,0.3,subset='test')
     print(dataset_test.__len__())
+    dataloader
