@@ -2,7 +2,7 @@
 *.tar #saved pytorch model checkpoint
 *.npy
 *.swp
-
+/Firma/Multi_Class/LSTM/saved_model
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
