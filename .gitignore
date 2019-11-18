@@ -1,5 +1,8 @@
+#added by me
+*.tar #saved pytorch model checkpoint
 *.npy
 *.swp
+
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
