@@ -34,7 +34,7 @@ def main():
                         help='maximum number of epochs')
     parser.add_argument('--input_dim', type=int, default=564,
                         help='input dimension')
-    parser.add_argument('--learning_rate', type=float, default=0.001,
+    parser.add_argument('--learning_rate', type=float, default=0.0001,
                         help='initial learning rate')
     parser.add_argument('--weight_decay', type=float, default=1e-4,
                         help='weight_decay rate')
@@ -59,8 +59,8 @@ def train_model(model, optimizer, train, val, max_epochs,savepath):
         total_loss = 0
         for step, (seq_data,label) in enumerate (train):
             model.zero_grad()
-#            seq_data.cuda()
-#            label.cuda()
+            seq_data=seq_data.cuda()
+            label= label.cuda()
             label_pre=model(seq_data.float())
 #            label_pre=model(seq_data.cuda())
 
@@ -68,12 +68,13 @@ def train_model(model, optimizer, train, val, max_epochs,savepath):
             loss_step.backward()
             optimizer.step()
             pred_idx = torch.max(label_pre, 1)[1]
-            y_true += list(label)
-            y_pred += list(pred_idx.data.int())
+            y_true += list(label.cpu())
+            
+            y_pred += list(pred_idx.cpu().data.int())
             total_loss += loss_step
             if(step % 200 ==0) :
                 print('train step:',step)
-                print('accuracy of current batch: ',accuracy_score(label,pred_idx.data.int()))
+                print('accuracy of current batch: ',accuracy_score(label.cpu(),pred_idx.cpu().data.int()))
         acc = accuracy_score(y_true, y_pred)
         val_loss, val_acc = evaluate_val_set(
             model, val, criterion)
@@ -95,12 +96,14 @@ def evaluate_val_set(model, dat_loader_val,criterion):
         if(step % 200 ==0):
             print('val step:',step)
 #        print(seq_data.shape) [batch,seq_size,data_dim]
+        seq_data=seq_data.cuda()
+        label=label.cuda()
         label_pre = model(seq_data.float())
         loss_step=criterion(label_pre,label)
         total_loss+=loss_step
-        y_true+=list(label)
+        y_true+=list(label.cpu())
         pred_idx=torch.max(label_pre, 1)[1]
-        y_pred+=list(pred_idx.data.int())
+        y_pred+=list(pred_idx.cpu().data.int())
     acc=accuracy_score(y_true,y_pred)
     return total_loss.data.float()/step, acc
 
@@ -137,6 +140,7 @@ def train(args):
     model = LSTMClassifier (args.input_dim,
                            args.hidden_dim, output_size=17)
   #  optimizer = optim.SGD(        model.parameters(), lr=args.learning_rate, weight_decay=args.weight_decay)
+    model.cuda()
     optimizer = optim.Adam(model.parameters(),lr=args.learning_rate)
     model = train_model(model, optimizer, dat_loader_train, dat_loader_val,args.num_epochs,args.save_path)
 
