@@ -56,7 +56,7 @@ class FirmaData_select_subjects(Dataset):
             data_temp=[]
             label_temp=[]
             for idx in range( self.datamat.shape[0]-(self.window_size)):
-                data_temp.append(self.datamat[idx:idx+(self.window_size), :])
+                data_temp.append(self.datamat[idx:idx+(self.window_size), :].squeeze(0))
                 label_temp.append(sub_id)
             matsize=len(data_temp)
             train_idx=int(train_part*matsize)

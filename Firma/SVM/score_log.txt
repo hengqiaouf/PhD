@@ -1,0 +1,18 @@
+
+train subject: 0, precision: 0.110, recall: 0.715, N_test_normal: 5335,N_test_anomaly:329695
+train subject: 1, precision: 0.112, recall: 0.660, N_test_normal: 2898,N_test_anomaly:337820
+train subject: 2, precision: 0.194, recall: 0.904, N_test_normal: 8077,N_test_anomaly:320558
+train subject: 3, precision: 0.064, recall: 0.871, N_test_normal: 7898,N_test_anomaly:321154
+train subject: 4, precision: 0.110, recall: 0.572, N_test_normal: 3737,N_test_anomaly:335022
+train subject: 5, precision: 0.994, recall: 0.455, N_test_normal: 3527,N_test_anomaly:335723
+train subject: 6, precision: 0.428, recall: 0.463, N_test_normal: 4196,N_test_anomaly:333493
+train subject: 7, precision: 0.551, recall: 0.882, N_test_normal: 6803,N_test_anomaly:324804
+train subject: 8, precision: 0.222, recall: 0.881, N_test_normal: 7790,N_test_anomaly:321512
+train subject: 9, precision: 0.478, recall: 0.405, N_test_normal: 3513,N_test_anomaly:335770
+train subject: 10, precision: 0.349, recall: 0.900, N_test_normal: 8798,N_test_anomaly:318152
+train subject: 11, precision: 0.252, recall: 0.513, N_test_normal: 7264,N_test_anomaly:323268
+train subject: 12, precision: 0.308, recall: 0.564, N_test_normal: 11152,N_test_anomaly:310306
+train subject: 13, precision: 0.119, recall: 0.777, N_test_normal: 3336,N_test_anomaly:336359
+train subject: 14, precision: 0.208, recall: 0.721, N_test_normal: 9545,N_test_anomaly:315662
+train subject: 15, precision: 0.086, recall: 0.550, N_test_normal: 3263,N_test_anomaly:336604
+train subject: 16, precision: 0.183, recall: 0.246, N_test_normal: 7135,N_test_anomaly:323698
