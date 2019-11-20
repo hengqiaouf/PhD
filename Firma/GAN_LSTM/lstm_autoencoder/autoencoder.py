@@ -1,20 +1,21 @@
 import torch
 import torch.nn as nn
 import torch.optim as optim
+import random
 #import dataread
 import os
 from dataread import FirmaData_onesubject
 from torch.utils.data import Dataset, DataLoader
 
 # hyper-parameters
-b_size = 32
+b_size = 128
 window_size = 10  # size of sliding window, or sequence length
 subject_id_train = 1
 subject_id_anomaly=3
 latent_dim = 20  # dimension of hidden state in GRU
 num_layer = 1  # number of layers of GRU
-learning_rate = 0.005
-Max_epoch = 3
+learning_rate = 0.0001
+Max_epoch = 10
 # data set up
 cur_dir = os.getcwd()
 data_folder_dir = os.path.join(cur_dir, "../../data")
@@ -43,7 +44,7 @@ class Encoder(nn.Module):
         _, last_hidden = self.encoder(encode_input)
         return last_hidden
 class Decoder(nn.Module):
-     def __init__(self, input_dim, latent_dim, output_dim, num_layers): #output_dim should be the same with input_dim
+    def __init__(self, input_dim, latent_dim, output_dim, num_layers): #output_dim should be the same with input_dim
         super(Decoder, self).__init__()
         self.input_dim = input_dim
         self.latent_dim = latent_dim
@@ -69,20 +70,20 @@ class Seq2Seq(nn.Module):
             "Hidden dimensions of encoder and decoder must be equal!"
         assert encoder.num_layers == decoder.num_layers, \
             "Encoder and decoder must have equal number of layers!"
-    def forward(self, src, trg, teacher_forcing_ratio=0.5):
+    def forward(self, src, teacher_forcing_ratio=0.5):
         # src = [ batch size,src sent len,data_dim]
         # trg = [ batch size,trg sent len,data_dim]
         # teacher_forcing_ratio is probability to use teacher forcing
         # e.g. if teacher_forcing_ratio is 0.75 we use ground-truth inputs 75% of the time
-        batch_size = trg.shape[0]
-        max_len = trg.shape[1]
+        batch_size = src.shape[0]
+        max_len = src.shape[1]
         data_size = self.decoder.output_dim
         # tensor to store decoder outputs
         outputs = torch.zeros(max_len,batch_size, data_size).to(self.device) # we need to reshape this into [batch_size,max_len,data_size] later
         # last hidden state of the encoder is used as the initial hidden state of the decoder
         hidden= self.encoder(src)
         # first input to the decoder zero, having same shape as the first step of input
-        input = torch.zeros([batch_size,data_size])
+        input = torch.zeros([batch_size,data_size],device=cuda)
         for t in range(1, max_len):
             # insert input token embedding, previous hidden and previous cell states
             # receive output tensor (predictions) and new hidden and cell states
@@ -93,22 +94,24 @@ class Seq2Seq(nn.Module):
             teacher_force = random.random() < teacher_forcing_ratio
             # if teacher forcing, use actual current source sequence step
             # if not, use predicted token
-            next_true_in=trg[:,t,:]
-            input = next_true_in if teacher_force else output #narrow: slice from the 1 st dimension(seq_len), starting from t th step, with length 1
-        return outputs
+            next_true_in=src[:,t,:]
+            input = next_true_in if teacher_force else output
+        return outputs.reshape([batch_size,max_len,-1])
+
 model_encoder=Encoder(input_size,latent_dim,num_layer)
-model_decoder=Decoder(input_size,latent_dim,,input_size,num_layer)
-model = Seq2Seq(model_encoder,model_decoder,cuda)
+model_decoder=Decoder(input_size,latent_dim,input_size,num_layer)
+model = Seq2Seq(model_encoder,model_decoder,cuda).to(cuda)
 loss_function = nn.MSELoss()
 optimizer = optim.Adam(model.parameters(), lr=learning_rate)
 for epoch in range(Max_epoch):
     for step, seq_data in enumerate(loader_train):
 #        print(seq_data.shape)  # [32,10,564], [batch,seq_len,data_dim]
+        seq_data=seq_data.cuda()
         seq_pred = model(seq_data.float())
-        loss = loss_function(seq_pred, seq_data)
+        loss = loss_function(seq_pred, seq_data.float())
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
         if step % 100 == 0:
-            print('Epoch: ', epoch, '| train loss: %.4f' % loss.data.numpy())
+            print('Epoch: ', epoch, '| train loss: %.4f' % loss.cpu().data.numpy())
 
