@@ -15,7 +15,7 @@ subject_id_anomaly=3
 latent_dim = 20  # dimension of hidden state in GRU
 num_layer = 1  # number of layers of GRU
 learning_rate = 0.0001
-Max_epoch = 10
+Max_epoch = 50
 # data set up
 cur_dir = os.getcwd()
 data_folder_dir = os.path.join(cur_dir, "../../data")

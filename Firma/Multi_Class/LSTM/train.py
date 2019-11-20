@@ -14,14 +14,13 @@ import torch.optim as optim
 from dataread import *
 
 from torch.utils.data import Dataset, DataLoader
-from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence
 from sklearn.metrics import classification_report, confusion_matrix, accuracy_score
 from model import LSTMClassifier
 
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--save_path',type=str,default='./saved_model')
+    parser.add_argument('--save_path',type=str,default='./saved_model/shared_data/1_week')
     parser.add_argument('--data_dir', type=str, default='../../data',
                         help='data_directory')
     parser.add_argument('--subset_par',type=list,default=[0.5,0.2,0.3],
@@ -126,7 +125,6 @@ def evaluate_test_set(model, test, x_to_ix, y_to_ix):
 
 
 def train(args):
-
     random.seed(args.seed)
     dataset_train=FirmaData_all_subjects(args.data_dir,60,args.subset_par[0],args.subset_par[1],args.subset_par[2],subset='train')
     dataset_val=FirmaData_all_subjects(args.data_dir,60,args.subset_par[0],args.subset_par[1],args.subset_par[2],subset='val')
