@@ -22,15 +22,21 @@ class FirmaData_onesubject(Dataset):
             # binarilize
             self.datamat = np.float64(self.datamat > 0)
         setsize = self.datamat.shape[0] - self.window_size
-        train_idx = int(setsize * train_part)
-        val_idx = int(setsize * (train_part + val_part))
-        if (subset == 'train'):
-            self.datamat = self.datamat[:train_idx]
-        if (subset == 'val'):
-            self.datamat = self.datamat[train_idx:val_idx]
-        if (subset == 'test'):
-            self.datamat = self.datamat[val_idx:]
 
+        # if (subset == 'train'):
+        #     self.datamat = self.datamat[:train_idx]
+        # if (subset == 'val'):
+        #     self.datamat = self.datamat[train_idx:val_idx]
+        # if (subset == 'test'):
+        #     self.datamat = self.datamat[val_idx:]
+        val_idx = int(setsize * val_part)
+        train_idx = int(setsize * (train_part + val_part))
+        if (subset == 'train'):
+            self.datamat = self.datamat[val_idx:train_idx]
+        if (subset == 'val'):
+            self.datamat = self.datamat[:val_idx]
+        if (subset == 'test'):
+            self.datamat = self.datamat[train_idx:]
     def __len__(self):
         return self.datamat.shape[0] - (self.window_size)
 

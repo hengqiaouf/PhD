@@ -30,7 +30,7 @@ def main():
                         help='LSTM hidden dimensions')
     parser.add_argument('--batch_size', type=int, default=128,
                         help='size for each minibatch')
-    parser.add_argument('--num_epochs', type=int, default=10,
+    parser.add_argument('--num_epochs', type=int, default=60,
                         help='maximum number of epochs')
     parser.add_argument('--input_dim', type=int, default=564,
                         help='input dimension')

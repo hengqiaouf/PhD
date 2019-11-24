@@ -62,17 +62,29 @@ class FirmaData_all_subjects(Dataset):
                 data_temp.append(self.datamat[idx:idx+(self.window_size), :])
                 label_temp.append(sub_id)
             matsize=len(data_temp)
-            train_idx=int(train_part*matsize)
-            val_idx=int((train_part+val_part)*matsize)
+#            train_idx=int(train_part*matsize)
+#            val_idx=int((train_part+val_part)*matsize)
+#            if self.subset=='train':
+#                self.data=self.data+data_temp[:train_idx]
+#                self.label=self.label+label_temp[:train_idx]
+#            if self.subset=='val':
+#                self.data=self.data+data_temp[train_idx:val_idx]
+#                self.label=self.label+label_temp[train_idx:val_idx]
+#            if self.subset=='test':
+#                self.data=self.data+data_temp[val_idx:]
+#                self.label=self.label+label_temp[val_idx:]
+            val_idx=int(val_part*matsize)
+            train_idx=int((train_part+val_part)*matsize)
             if self.subset=='train':
-                self.data=self.data+data_temp[:train_idx]
-                self.label=self.label+label_temp[:train_idx]
+                self.data=self.data+data_temp[val_idx:train_idx]
+                self.label=self.label+label_temp[val_idx:train_idx]
             if self.subset=='val':
-                self.data=self.data+data_temp[train_idx:val_idx]
-                self.label=self.label+label_temp[train_idx:val_idx]
+                self.data=self.data+data_temp[:val_idx]
+                self.label=self.label+label_temp[:val_idx]
             if self.subset=='test':
-                self.data=self.data+data_temp[val_idx:]
-                self.label=self.label+label_temp[val_idx:]
+                self.data=self.data+data_temp[train_idx:]
+                self.label=self.label+label_temp[train_idx:]
+           
     def __len__(self):
 #        return len(self.data)
         return len(self.data)
