@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 import random
+from torch.utils.tensorboard import SummaryWriter
 #import dataread
 import os
 from dataread import FirmaData_onesubject
@@ -14,8 +15,8 @@ subject_id_train = 1
 subject_id_anomaly=3
 latent_dim = 20  # dimension of hidden state in GRU
 num_layer = 1  # number of layers of GRU
-learning_rate = 0.0001
-Max_epoch = 50
+learning_rate = 0.001
+Max_epoch = 10
 # data set up
 cur_dir = os.getcwd()
 data_folder_dir = os.path.join(cur_dir, "../../data")
@@ -97,21 +98,24 @@ class Seq2Seq(nn.Module):
             next_true_in=src[:,t,:]
             input = next_true_in if teacher_force else output
         return outputs.reshape([batch_size,max_len,-1])
-
+writer = SummaryWriter()
 model_encoder=Encoder(input_size,latent_dim,num_layer)
 model_decoder=Decoder(input_size,latent_dim,input_size,num_layer)
 model = Seq2Seq(model_encoder,model_decoder,cuda).to(cuda)
 loss_function = nn.MSELoss()
 optimizer = optim.Adam(model.parameters(), lr=learning_rate)
+global_step=0
 for epoch in range(Max_epoch):
     for step, seq_data in enumerate(loader_train):
 #        print(seq_data.shape)  # [32,10,564], [batch,seq_len,data_dim]
+        global_step+=1
         seq_data=seq_data.cuda()
         seq_pred = model(seq_data.float())
         loss = loss_function(seq_pred, seq_data.float())
+        writer.add_scalar('Loss/train',loss,global_step)
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
         if step % 100 == 0:
             print('Epoch: ', epoch, '| train loss: %.4f' % loss.cpu().data.numpy())
-
+writer.close()
