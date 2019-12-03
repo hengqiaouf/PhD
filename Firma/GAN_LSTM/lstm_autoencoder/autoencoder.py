@@ -105,6 +105,11 @@ model = Seq2Seq(model_encoder,model_decoder,cuda).to(cuda)
 loss_function = nn.MSELoss()
 optimizer = optim.Adam(model.parameters(), lr=learning_rate)
 global_step=0
+
+data_example=iter(loader_train)
+seq_data_example=data_example.next()
+seq_data_example=seq_data_example.float().cuda()
+#writer.add_graph(model,loader_train)
 for epoch in range(Max_epoch):
     for step, seq_data in enumerate(loader_train):
 #        print(seq_data.shape)  # [32,10,564], [batch,seq_len,data_dim]
@@ -118,4 +123,8 @@ for epoch in range(Max_epoch):
         optimizer.step()
         if step % 100 == 0:
             print('Epoch: ', epoch, '| train loss: %.4f' % loss.cpu().data.numpy())
+for step,seq_data in enumerate(loader_train):
+    seq_data=seq_data.cuda()
+    seq_pred=model(seq_data.float())
+    writer.add_histogram('histogram/train',)
 writer.close()

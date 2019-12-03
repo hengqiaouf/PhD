@@ -21,10 +21,10 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--running_mode', type=str, default='test', help='training or testing the model')
     parser.add_argument('--load_id', type=int, default=0, help='which model to load for test')
-    parser.add_argument('--save_path', type=str, default='./saved_model')
+    parser.add_argument('--save_path', type=str, default='./saved_model/exp2')
     parser.add_argument('--data_dir', type=str, default='../../data/shared_data/1_week',
                         help='data_directory')
-    parser.add_argument('--subset_par', type=list, default=[0.7-0.05, 0.05, 0.3],
+    parser.add_argument('--subset_par', type=list, default=[2/3-0.1*2/3, 0.1*2/3, 1/3],
                         help='partition of training, validation and test sets')
     parser.add_argument('--hidden_dim', type=int, default=100,
                         help='LSTM hidden dimensions')
