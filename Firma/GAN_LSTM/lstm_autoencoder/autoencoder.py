@@ -7,6 +7,10 @@ from torch.utils.tensorboard import SummaryWriter
 import os
 from dataread import FirmaData_onesubject
 from torch.utils.data import Dataset, DataLoader
+import matplotlib.pyplot as plt
+import sklearn
+from sklearn.metrics import classification_report
+
 
 # hyper-parameters
 b_size = 128
@@ -103,12 +107,11 @@ model_encoder=Encoder(input_size,latent_dim,num_layer)
 model_decoder=Decoder(input_size,latent_dim,input_size,num_layer)
 model = Seq2Seq(model_encoder,model_decoder,cuda).to(cuda)
 loss_function = nn.MSELoss()
+#loss_function = nn.L1Loss()
 optimizer = optim.Adam(model.parameters(), lr=learning_rate)
 global_step=0
 
-data_example=iter(loader_train)
-seq_data_example=data_example.next()
-seq_data_example=seq_data_example.float().cuda()
+
 #writer.add_graph(model,loader_train)
 for epoch in range(Max_epoch):
     for step, seq_data in enumerate(loader_train):
@@ -123,8 +126,20 @@ for epoch in range(Max_epoch):
         optimizer.step()
         if step % 100 == 0:
             print('Epoch: ', epoch, '| train loss: %.4f' % loss.cpu().data.numpy())
-for step,seq_data in enumerate(loader_train):
-    seq_data=seq_data.cuda()
-    seq_pred=model(seq_data.float())
-    writer.add_histogram('histogram/train',)
+data_example=iter(loader_train)
+seq_data_example=data_example.next()
+seq_data_example=seq_data_example.float().cuda()
+pre_data_example=model(seq_data_example)
+
+
+y_pred=pre_data_example.cpu().detach().numpy().flatten()
+
+plt.hist(y_pred,bins=15,range=(-0.5,1.5),log=True)
+
+y_pred=1*(y_pred>0.5)
+y_true=seq_data_example.cpu().detach().numpy().flatten()
+plt.show()
+target_names = ['class 0', 'class 1']
+report=classification_report(y_true,y_pred,target_names=target_names)
+print(report)
 writer.close()

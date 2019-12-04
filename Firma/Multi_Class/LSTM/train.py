@@ -6,10 +6,12 @@ import torch.nn as nn
 import torch.optim as optim
 from dataread import *
 from torch.utils.data import Dataset, DataLoader
-from sklearn.metrics import classification_report, confusion_matrix, accuracy_score
+from sklearn.metrics import classification_report, confusion_matrix, accuracy_score,f1_score
 from model import LSTMClassifier
 import matplotlib.pyplot as plt
 import numpy as np
+from torch.utils.tensorboard import SummaryWriter
+
 
 #fix random seeds
 torch.manual_seed(0)
@@ -21,10 +23,10 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--running_mode', type=str, default='test', help='training or testing the model')
     parser.add_argument('--load_id', type=int, default=0, help='which model to load for test')
-    parser.add_argument('--save_path', type=str, default='./saved_model/exp2')
+    parser.add_argument('--save_path', type=str, default='./saved_model')
     parser.add_argument('--data_dir', type=str, default='../../data/shared_data/1_week',
                         help='data_directory')
-    parser.add_argument('--subset_par', type=list, default=[2/3-0.1*2/3, 0.1*2/3, 1/3],
+    parser.add_argument('--subset_par', type=list, default=[0.9*2/3, 0.1*2/3, 1/3],
                         help='partition of training, validation and test sets')
     parser.add_argument('--hidden_dim', type=int, default=100,
                         help='LSTM hidden dimensions')
@@ -40,7 +42,11 @@ def main():
                         help='weight_decay rate')
     parser.add_argument('--seed', type=int, default=123,
                         help='seed for random initialisation')
+    parser.add_argument('--test_all', type=int, default=0, help= 'are we testing all saved models? 0 or 1')
+    parser.add_argument('--test_id',type=int, default=0, help= 'model saved on which epoch to be tested')
     args = parser.parse_args()
+    if not os.path.exists(args.save_path):
+        os.makedirs(args.save_path)
     if args.running_mode == 'train':
         train(args)
     elif args.running_mode == 'test':
@@ -51,6 +57,7 @@ def main():
 
 def train_model(model, optimizer, train, val, max_epochs, savepath):
     criterion = nn.NLLLoss()
+    writer=SummaryWriter(savepath)    
     for epoch in range(max_epochs):
         model.train()
         print('Epoch:', epoch)
@@ -62,25 +69,26 @@ def train_model(model, optimizer, train, val, max_epochs, savepath):
             seq_data = seq_data.cuda()
             label = label.cuda()
             label_pre = model(seq_data.float())
-            #            label_pre=model(seq_data.cuda())
-
             loss_step = criterion(label_pre, label)
             loss_step.backward()
             optimizer.step()
             pred_idx = torch.max(label_pre, 1)[1]
             y_true += list(label.cpu())
-
             y_pred += list(pred_idx.cpu().data.int())
             total_loss += loss_step
             # if(step % 200 ==0) :
             #     print('train step:',step)
             #     print('accuracy of current batch: ',accuracy_score(label.cpu(),pred_idx.cpu().data.int()))
         acc = accuracy_score(y_true, y_pred)
+        train_loss=total_loss.data.float()/len(train)
         val_loss, val_acc = evaluate_val_set(
             model, val, criterion)
+        writer.add_scalars('train_loss/acc',{'loss':train_loss,
+                                             'acc':acc},epoch)
+        writer.add_scalars('val_loss/acc',{'loss':val_loss,
+                                           'acc':val_acc},epoch)
         print("Epoch: {}   Train loss: {} - acc: {} \nValidation loss: {} - acc: {}".format(epoch,
-                                                                                            total_loss.data.float() / len(
-                                                                                                train), acc, val_loss,
+                                                                                            train_loss, acc, val_loss,
                                                                                             val_acc))
         torch.save({
             'epoch': epoch,
@@ -88,6 +96,7 @@ def train_model(model, optimizer, train, val, max_epochs, savepath):
             'optimizer_state_dict': optimizer.state_dict(),
             'loss': total_loss,
         }, os.path.join(savepath, 'model_' + str(epoch) + '.tar'))
+    writer.close()
     return model
 
 
@@ -127,12 +136,13 @@ def evaluate_test_set(model, dat_loader_test):
     acc = accuracy_score(y_true, y_pred)
     plot_conf_mat=False
     conf_mat = confusion_matrix(y_true, y_pred)
+    f1=f1_score(y_true,y_pred,average='macro') 
     if plot_conf_mat:
         fig,ax=plt.subplots()
         im = ax.imshow(conf_mat, interpolation='nearest', cmap=plt.cm.Blues)
         ax.figure.colorbar(im, ax=ax)
         plt.show()
-    return acc, conf_mat
+    return acc,f1, conf_mat
 
 
 def train(args):
@@ -153,13 +163,24 @@ def test(args):
     dataset_test = FirmaData_all_subjects(args.data_dir, 60, args.subset_par[0], args.subset_par[1], args.subset_par[2],
                                           subset='test', pre_process=False)
     dat_loader_test = DataLoader(dataset_test, batch_size=args.batch_size, shuffle=True)
-    for loadid in range(args.num_epochs):
+    if args.test_all:
+        for loadid in range(args.num_epochs):
+            saved_model = os.path.join(args.save_path, 'model_' + str(loadid) + '.tar')
+            checkpoint = torch.load(saved_model)
+            model = LSTMClassifier(args.input_dim, args.hidden_dim, output_size=17)
+            model.cuda()
+            model.load_state_dict(checkpoint['model_state_dict'])
+            acc,f1,_= evaluate_test_set(model, dat_loader_test)
+            print('model {} test_accuracy:{:5.4f}, f1_score:{:5.4f}'.format(loadid,acc,f1))
+    else:
+        loadid=args.test_id
         saved_model = os.path.join(args.save_path, 'model_' + str(loadid) + '.tar')
         checkpoint = torch.load(saved_model)
         model = LSTMClassifier(args.input_dim, args.hidden_dim, output_size=17)
         model.cuda()
         model.load_state_dict(checkpoint['model_state_dict'])
-        acc,_= evaluate_test_set(model, dat_loader_test)
-        print('model {} test_accuracy:{:5.4f}'.format(loadid,acc))
+        acc,f1, _ = evaluate_test_set(model, dat_loader_test)
+        #print('model {} test_accuracy:{:5.4f}'.format(loadid, acc))
+        print('model {} test_accuracy:{:5.4f}, f1_score:{:5.4f}'.format(loadid,acc,f1))
 if __name__ == '__main__':
     main()
