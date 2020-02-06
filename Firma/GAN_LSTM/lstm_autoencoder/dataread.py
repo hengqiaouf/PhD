@@ -1,7 +1,6 @@
 from torch.utils.data import Dataset, DataLoader
 import numpy as np
 import os
-import glob
 
 
 class FirmaData_onesubject(Dataset):
@@ -32,7 +31,6 @@ class FirmaData_onesubject(Dataset):
             self.datamat = self.datamat[val_idx:]
     def __len__(self):
         return self.datamat.shape[0] - (self.window_size)
-
     def __getitem__(self, idx):
         return self.datamat[idx:idx + (self.window_size), :]
 

@@ -1,2 +1,2 @@
-#python train.py --running_mode train --save_path ./saved_model/1A --data_dir ../../data/shared_data/1_week
-python train.py --running_mode test --save_path ./saved_model/1A --data_dir ../../data/shared_data/1_week --test_all 0 --test_id 20
+python train.py --running_mode train
+#python train.py --running_mode test --save_path ./saved_model/\[1\,\ 13\,\ 6\]/\30 --data_dir ../../data/shared_data_1/1_weeks --test_all 1 --test_id 20
